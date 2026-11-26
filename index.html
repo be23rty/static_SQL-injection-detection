@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecureCode AI — Intelligent Security Analysis Platform</title>
+  <meta name="description" content="AI-powered code security analysis, vulnerability detection, and automatic repair using Groq LLMs." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <span class="logo-text">SecureCode AI</span>
+      </div>
+      <nav class="header-nav">
+        <a href="#upload-section" class="nav-link">Analyze</a>
+        <a href="#results-section" class="nav-link" data-pane="results">Results</a>
+        <a href="#" class="nav-link" data-pane="chat">AI Chat</a>
+        <a href="#" class="nav-link" data-pane="dependencies">Dependencies</a>
+        <a href="#" class="nav-link" data-pane="agents">Agents</a>
+        <a href="#" class="nav-link" data-pane="firewall">Firewall</a>
+      </nav>
+      <div class="header-controls">
+        <!-- Model selector -->
+        <div class="model-selector-wrap" id="model-selector-wrap" title="Select AI Model">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          <select id="model-select" class="model-select" aria-label="AI Model">
+            <option value="">Loading models…</option>
+          </select>
+        </div>
+        <!-- AI Status -->
+        <span id="ai-model-status" class="ai-status-pill" data-state="loading" title="Click to view/change API Key">
+          <span class="status-dot-sm"></span>
+          <span class="status-text">Checking…</span>
+        </span>
+        <!-- API Key Button -->
+        <button id="api-key-btn" class="btn-api-key" type="button" aria-label="Configure API Key" title="Configure Groq/Grok API Key">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 2l-2 2m-1-1l-3 3m1-1l-2 2m-7 8a6 6 0 1 1 8.49-8.49L21 2l-3 3-2-2-3 3 2 2-3 3"/>
+          </svg>
+          <span class="btn-api-key-text">API Key</span>
+        </button>
+        <!-- Theme toggle -->
+        <button id="theme-toggle" class="btn-icon" type="button" aria-label="Toggle dark/light mode" title="Toggle theme">
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== UPLOAD SECTION ===== -->
+  <main id="upload-section" class="main-content ide-main">
+    <div class="ide-layout" id="ide-layout">
+      <aside class="file-explorer" id="file-explorer" aria-label="Project files">
+        <div class="explorer-heading">
+          <span>PROJECT EXPLORER</span>
+          <button type="button" id="collapse-explorer-btn" title="Collapse explorer" aria-label="Collapse explorer">‹</button>
+        </div>
+        <div class="explorer-project-name">
+          <span class="folder-glyph">▾</span>
+          <span id="explorer-project-title">NO FOLDER OPEN</span>
+          <button type="button" id="explorer-close-project" title="Close folder / clear project" class="btn-ghost btn-sm" style="display:none; margin-left:auto; padding:2px 6px; font-size:11px; cursor:pointer;">✕ Close</button>
+        </div>
+
+        <!-- Explorer Search Filter -->
+        <div class="explorer-search-wrap">
+          <input type="text" id="explorer-search" class="explorer-search-input" placeholder="Search files..." aria-label="Search files in project" />
+          <button type="button" id="explorer-search-clear" class="explorer-search-clear" title="Clear search" style="display:none;">✕</button>
+        </div>
+
+        <!-- Explorer Actions Toolbar -->
+        <div class="explorer-actions">
+          <button type="button" id="explorer-open-file" title="Open single file">＋ File</button>
+          <button type="button" id="explorer-open-folder" title="Open project folder">＋ Folder</button>
+          <button type="button" id="explorer-open-zip" title="Upload project ZIP">ZIP</button>
+          <button type="button" id="explorer-refresh-btn" title="Refresh project tree">↻</button>
+        </div>
+
+        <!-- Checkbox Selection Toolbar -->
+        <div class="explorer-selection-bar" id="explorer-selection-bar" style="display:none;">
+          <div class="explorer-selection-info">
+            <label class="explorer-check-all-label" title="Select / deselect all files">
+              <input type="checkbox" id="explorer-select-all" checked />
+              <span id="explorer-selection-count">Selected: 0</span>
+            </label>
+          </div>
+          <div class="explorer-selection-btns">
+            <button type="button" id="explorer-scan-selected" class="btn btn-primary btn-xs" title="Scan only checked files">⚡ Scan Selected</button>
+            <button type="button" id="explorer-scan-all" class="btn btn-ghost btn-xs" title="Scan entire project">⚡ All</button>
+          </div>
+        </div>
+
+        <!-- Hierarchical Tree Container -->
+        <div class="explorer-file-list" id="explorer-file-list">
+          <div class="explorer-empty">Open a file, folder, ZIP, or GitHub repository to see files here.</div>
+        </div>
+
+        <div class="explorer-bottom">
+          <span class="status-dot"></span>
+          <span id="explorer-status">Ready</span>
+          <span id="explorer-counts" class="explorer-counts-badge" style="display:none;">0 files</span>
+        </div>
+      </aside>
+
+      <!-- Resizable Left Splitter -->
+      <div class="pane-splitter explorer-splitter" id="explorer-splitter" role="separator" aria-orientation="vertical" title="Drag to resize explorer"></div>
+
+      <!-- Central Code Workspace Card -->
+      <div class="workspace-card">
+        <!-- VS Code File Tabs -->
+        <div class="editor-tabs-bar" id="editor-tabs-bar" role="tablist" aria-label="Open editor tabs">
+          <!-- Dynamic open file tabs -->
+        </div>
+
+        <!-- VS Code Breadcrumbs Bar -->
+        <div class="editor-breadcrumbs" id="editor-breadcrumbs">
+          <span class="breadcrumb-item breadcrumb-root">📁 No file selected</span>
+        </div>
+
+      <div class="editor-panel" id="editor-panel">
+        <div class="editor-toolbar">
+          <div>
+            <span class="editor-title" id="editor-title">Source code</span>
+            <span class="editor-hint">Write code or paste it here</span>
+          </div>
+          <div class="editor-actions">
+            <button class="btn btn-ghost btn-sm" id="sample-btn" type="button">Load Sample</button>
+            <button class="btn btn-ghost btn-sm" id="clear-code-btn" type="button">Clear</button>
+          </div>
+        </div>
+        <div class="code-editor-wrap">
+          <div class="line-numbers" id="line-numbers" aria-hidden="true">1</div>
+          <textarea id="code-editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="# Paste or write Python code here...
+
+from flask import request
+
+name = request.args.get('name')
+query = &quot;SELECT * FROM users WHERE name = '&quot; + name + &quot;'&quot;
+cursor.execute(query)"></textarea>
+        </div>
+        <!-- Horizontal Scroll Slider (Moved to Down of Editor) -->
+        <div class="editor-slider-bar" id="editor-slider-bar" title="Horizontal scroll slider">
+          <button type="button" class="slider-arrow-btn" id="slider-scroll-left" title="Scroll left">◀</button>
+          <div class="slider-track-wrap">
+            <input type="range" class="editor-h-slider" id="editor-h-slider" min="0" max="100" value="0" aria-label="Horizontal scroll slider" />
+          </div>
+          <button type="button" class="slider-arrow-btn" id="slider-scroll-right" title="Scroll right">▶</button>
+        </div>
+        <div class="editor-footer">
+          <span id="code-status">0 lines · 0 characters</span>
+          <span id="language-hint">Auto-detects Python · JavaScript · Java · C · C++ · max 2 MB</span>
+        </div>
+      </div>
+
+      <div class="upload-panel" id="upload-panel" hidden>
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-input" accept=".py,.js,.jsx,.mjs,.cjs,.java,.c,.h,.cc,.cpp,.cxx,.hpp,.hh,.zip,application/zip,application/x-zip-compressed" hidden />
+          <input type="file" id="project-input" webkitdirectory directory multiple hidden />
+          <input type="file" id="project-zip-input" accept=".zip,application/zip,application/x-zip-compressed" hidden />
+          <div class="drop-zone-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p class="drop-zone-text">Drop a source file or project folder here</p>
+          <p class="drop-zone-sub">or</p>
+          <div class="drop-zone-actions"><button class="btn btn-primary" id="browse-btn" type="button">Browse file</button><button class="btn btn-ghost" id="browse-project-btn" type="button">Choose project folder</button><button class="btn btn-ghost" id="browse-zip-btn" type="button">Upload project ZIP</button></div>
+          <p class="drop-zone-hint">Python · JavaScript · Java · C · C++ · single file, whole folder, or ZIP · max 10 MB source / 50 MB ZIP.</p>
+        </div>
+        <div class="repo-connect-card">
+          <h3>Connect a GitHub repository</h3>
+          <p class="drop-zone-hint repo-intro">Analyze a public repository by URL. Source files are fetched read-only and are never executed.</p>
+          <div class="repo-form">
+            <input id="repo-url-input" type="url" placeholder="https://github.com/owner/repository" />
+            <input id="repo-branch-input" type="text" placeholder="Branch (default)" />
+            <button class="btn btn-primary" id="analyze-repo-btn" type="button">Analyze Repository</button>
+          </div>
+          <p class="drop-zone-hint">For private repositories, configure GITHUB_TOKEN in your local environment with read-only access.</p>
+        </div>
+        <div class="file-preview" id="file-preview" hidden>
+          <div class="file-preview-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <div class="file-preview-info">
+            <span class="file-name" id="file-name">file.py</span>
+            <span class="file-size" id="file-size">0 KB</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="clear-btn" type="button">✕</button>
+        </div>
+      </div>
+
+      <div class="analyze-row">
+        <div class="source-name-wrap">
+          <label>Detected Language</label>
+          <div id="detected-language" class="detected-language">Auto-detecting…</div>
+        </div>
+        <div class="source-name-wrap">
+          <label for="source-name">File name</label>
+          <input id="source-name" type="text" value="pasted_code.txt" maxlength="120" />
+        </div>
+        <button class="btn btn-accent btn-lg" id="analyze-btn" disabled>
+          <span class="btn-text">Run Analysis</span>
+          <span class="btn-spinner" hidden>
+            <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" stroke-opacity="0.3"/>
+              <path d="M12 2a10 10 0 0 1 10 10"/>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <div class="pane-splitter" id="pane-splitter" role="separator" aria-orientation="vertical" aria-label="Resize editor and results panels" tabindex="0" title="Drag to resize panels"></div>
+
+<div class="right-pane" id="right-pane">
+      <div class="pane-tabs" role="tablist" aria-label="Analysis panels">
+        <button type="button" class="pane-tab pane-tab--active" role="tab" data-pane="results" aria-selected="true">Results</button>
+        <button type="button" class="pane-tab" role="tab" data-pane="chat" aria-selected="false">AI Chat</button>
+        <button type="button" class="pane-tab" role="tab" data-pane="dependencies" aria-selected="false">Dependencies (SCA)</button>
+        <button type="button" class="pane-tab" role="tab" data-pane="agents" aria-selected="false">🤖 Agent Activity</button>
+        <button type="button" class="pane-tab" role="tab" data-pane="firewall" aria-selected="false">Firewall Lab</button>
+      </div>
+      <div class="pane-body">
+        <!-- RESULTS PANEL -->
+        <div class="pane-panel" data-panel="results">
+          <div class="results-empty" id="results-empty">
+            <div class="results-empty-icon">🛡️</div>
+            <h3>No analysis yet</h3>
+            <p>Paste or open some code, then click <b>Run Analysis</b>. Findings, AI investigation and repair tools will appear here.</p>
+          </div>
+
+    <!-- Results section (hidden until analysis done) -->
+    <section class="results-section" id="results-section" hidden>
+
+      <!-- Error card -->
+      <div class="error-card" id="error-card" hidden>
+        <div class="error-icon">⚠</div>
+        <div class="error-body">
+          <h3>Analysis Failed</h3>
+          <pre class="error-msg" id="error-msg"></pre>
+        </div>
+      </div>
+
+      <!-- Summary bar -->
+      <div class="summary-bar" id="summary-bar" hidden>
+        <div class="summary-card summary-card--total" id="sc-total">
+          <div class="sc-value" id="sc-total-val">0</div>
+          <div class="sc-label">Vulnerabilities</div>
+        </div>
+        <div class="summary-card summary-card--critical" id="sc-critical">
+          <div class="sc-value" id="sc-critical-val">0</div>
+          <div class="sc-label">Critical</div>
+        </div>
+        <div class="summary-card summary-card--high" id="sc-high">
+          <div class="sc-value" id="sc-high-val">0</div>
+          <div class="sc-label">High</div>
+        </div>
+        <div class="summary-card summary-card--medium" id="sc-medium">
+          <div class="sc-value" id="sc-medium-val">0</div>
+          <div class="sc-label">Medium</div>
+        </div>
+        <div class="summary-card summary-card--low" id="sc-low">
+          <div class="sc-value" id="sc-low-val">0</div>
+          <div class="sc-label">Low</div>
+        </div>
+        <div class="summary-card summary-card--score" id="sc-score">
+          <div class="sc-value" id="sc-score-val">—</div>
+          <div class="sc-label">Security Score</div>
+        </div>
+      </div>
+
+      <!-- Report export buttons -->
+      <div class="report-toolbar" id="report-toolbar" hidden>
+        <span class="report-toolbar-label">Export Report:</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="export-json-btn">📄 JSON</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="export-pdf-btn">🖨️ PDF</button>
+      </div>
+
+      <section class="agentic-workflow-card" aria-labelledby="agentic-workflow-title">
+        <div class="agentic-workflow-head"><div><span class="eyebrow">AGENTIC WORKFLOW</span><h2 id="agentic-workflow-title">Investigate → Auto-Repair Loop (Max 3 Rounds) → Validate</h2><p>AI performs multi-step security investigation, auto-repairs code, re-analyzes findings in a self-healing loop up to 3 times, and re-validates.</p></div><button type="button" class="btn btn-accent" id="run-agentic-workflow">Run Agentic Workflow</button></div>
+        <ol class="agentic-steps" id="agentic-steps"><li data-step="scan" class="step-done"><span>1</span><div><b>Static analysis</b><small>Deterministic rules find candidate issues</small></div></li><li data-step="investigate"><span>2</span><div><b>AI Investigate</b><small>AI reviews findings and evidence</small></div></li><li data-step="repair"><span>3</span><div><b>Self-Healing Repair</b><small>Iterative repair &amp; re-check loop (max 3 rounds)</small></div></li><li data-step="validate"><span>4</span><div><b>Final Validation</b><small>Re-scan confirms clean score</small></div></li></ol>
+        <p id="agentic-workflow-status" class="drop-zone-hint" role="status">Ready. AI repair is a proposal; validation does not guarantee that code is secure.</p>
+      </section>
+
+      <div class="ai-review-toolbar">
+        <button type="button" class="btn btn-primary" id="ai-investigate-btn">🔍 Investigate with AI</button>
+        <button type="button" class="btn btn-primary" id="ai-repair-btn">🔧 Auto-Repair &amp; Re-Check (Max 3 Rounds)</button>
+      </div>
+
+      <section class="stats-section" id="ai-review-section" hidden>
+        <div class="section-header"><h2 class="section-title">AI Investigation</h2></div>
+        <p id="ai-review-summary"></p>
+        <div id="ai-review-findings"></div>
+        <p id="ai-review-note" class="drop-zone-hint"></p>
+      </section>
+
+      <section class="stats-section" id="ai-repair-section" hidden>
+        <div class="section-header">
+          <h2 class="section-title">AI Auto-Repair &amp; Validation (Max 3 Rounds)</h2>
+          <span id="ai-repair-rounds-badge" class="syntax-badge syntax-badge--ok" hidden>Round 1/3</span>
+          <span id="ai-repair-syntax-badge" class="syntax-badge" hidden>Syntax Verified</span>
+        </div>
+        <p id="ai-repair-summary"></p>
+        <div id="ai-repair-rounds-progression" class="rounds-progression" style="margin: 10px 0;"></div>
+        <div id="ai-repair-changes"></div>
+        <div class="ai-repaired-code-wrap">
+          <div class="diff-header-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+            <h3 style="margin:0;">Repaired Code &amp; Visual Diff</h3>
+            <div class="diff-toggle-group">
+              <button type="button" class="btn btn-ghost btn-sm diff-toggle-btn active" id="diff-view-split">↔ Side-by-Side Diff</button>
+              <button type="button" class="btn btn-ghost btn-sm diff-toggle-btn" id="diff-view-unified">≡ Full Code</button>
+            </div>
+          </div>
+
+          <!-- Side-by-Side Split Diff View -->
+          <div id="split-diff-view" class="split-diff-container">
+            <div class="split-diff-column">
+              <div class="split-diff-pane-title split-diff-title--orig">🔴 Original Code (Vulnerable)</div>
+              <div class="split-diff-pane" id="split-diff-orig"></div>
+            </div>
+            <div class="split-diff-column">
+              <div class="split-diff-pane-title split-diff-title--rep">🟢 Repaired Code (Secured)</div>
+              <div class="split-diff-pane" id="split-diff-rep"></div>
+            </div>
+          </div>
+
+          <!-- Unified Full Code View -->
+          <div id="unified-code-view" hidden>
+            <pre><code id="ai-repaired-code"></code></pre>
+          </div>
+        </div>
+        <div class="ai-review-toolbar">
+          <button type="button" class="btn btn-primary" id="load-repaired-code" disabled>Accept &amp; Apply Repair</button>
+          <button type="button" class="btn btn-ghost" id="revert-backup-code" disabled>Revert to Backup</button>
+          <button type="button" class="btn btn-ghost" id="download-repaired-code" disabled>Download Repaired Code</button>
+          <button type="button" class="btn" id="validate-repaired-code" disabled>Re-analyze Repaired Code</button>
+        </div>
+        <p id="ai-repair-validation"></p>
+        <p id="ai-backup-status" class="drop-zone-hint"></p>
+        <p id="ai-repair-note" class="drop-zone-hint"></p>
+      </section>
+
+      <!-- Project relationship map -->
+      <div class="stats-section" id="project-graph-section" hidden>
+        <div class="section-header"><h2 class="section-title">Project Relationships</h2></div>
+        <div id="project-graph-summary" class="stats-grid"></div>
+        <div class="detail-grid detail-grid--spaced">
+          <div class="detail-item"><div class="detail-label">Imports</div><div class="detail-value" id="project-imports">—</div></div>
+          <div class="detail-item"><div class="detail-label">Cross-file calls</div><div class="detail-value" id="project-calls">—</div></div>
+          <div class="detail-item"><div class="detail-label">Data-flow candidates</div><div class="detail-value" id="project-flows-count">—</div></div>
+        </div>
+        <div id="project-graph-details" class="detail-grid--spaced"></div>
+        <p id="project-graph-limitations" class="drop-zone-hint"></p>
+      </div>
+
+      <!-- Vulnerability list -->
+      <div class="vuln-section" id="vuln-section" hidden>
+        <div class="section-header">
+          <h2 class="section-title">Detected Vulnerabilities</h2>
+          <div class="filter-pills" id="filter-pills">
+            <button class="pill pill--active" data-filter="all">All</button>
+            <button class="pill" data-filter="CRITICAL">Critical</button>
+            <button class="pill" data-filter="HIGH">High</button>
+            <button class="pill" data-filter="MEDIUM">Medium</button>
+            <button class="pill" data-filter="LOW">Low</button>
+          </div>
+        </div>
+        <div class="vuln-list" id="vuln-list"></div>
+      </div>
+
+      <!-- Symbol table -->
+      <div class="symbol-section" id="symbol-section" hidden>
+        <div class="section-header">
+          <h2 class="section-title">Symbol Table Snapshot</h2>
+          <button class="btn btn-ghost btn-sm" id="toggle-symbol-btn">Collapse</button>
+        </div>
+        <div class="symbol-table-wrap" id="symbol-table-wrap">
+          <table class="symbol-table" id="symbol-table">
+            <thead>
+              <tr>
+                <th>Variable</th>
+                <th>Taint State</th>
+              </tr>
+            </thead>
+            <tbody id="symbol-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-section" id="stats-section" hidden>
+        <div class="section-header">
+          <h2 class="section-title">Analysis Statistics</h2>
+        </div>
+        <div class="stats-grid" id="stats-grid"></div>
+      </div>
+
+    </section>
+        </div><!-- /results panel -->
+
+        <!-- AI CHAT PANEL -->
+        <div class="pane-panel pane-panel--chat" data-panel="chat" hidden>
+<section class="stats-section ai-chat-panel" id="ai-chat-section">
+      <div class="section-header">
+        <h2 class="section-title">Chat with SecureCode AI</h2>
+        <button class="btn btn-ghost btn-sm" id="clear-chat-btn" type="button">Clear Chat</button>
+      </div>
+      <p class="drop-zone-hint">Ask about your code, vulnerabilities, or how to fix them. The AI has full project context.</p>
+
+      <!-- Context-aware quick actions -->
+      <div class="chat-actions" id="chat-actions">
+        <button class="chat-action-btn" type="button" data-prompt="Explain this file and what it does.">Explain file</button>
+        <button class="chat-action-btn" type="button" data-prompt="Find all security vulnerabilities in this code and explain each one with the exact line number.">Find vulnerabilities</button>
+        <button class="chat-action-btn" type="button" data-prompt="Trace the data flow from user inputs to dangerous sinks in this code.">Trace data flow</button>
+        <button class="chat-action-btn" type="button" data-prompt="Analyze the entire project structure and explain how the files interact with each other.">Analyze project</button>
+        <button class="chat-action-btn" type="button" data-prompt="Suggest security improvements for this code.">Suggest improvements</button>
+        <button class="chat-action-btn" type="button" data-prompt="Generate a secure version of this code that fixes all the detected vulnerabilities.">Fix all issues</button>
+      </div>
+
+      <div id="ai-chat-messages" class="ai-chat-messages" aria-live="polite"><div class="ai-chat-bubble ai-chat-assistant">Hey! I'm SecureCode AI. Upload or paste your code and ask me about security vulnerabilities, code explanations, or how to fix issues. I'll provide clear, concise answers referencing specific files and line numbers.</div></div>
+      <form id="ai-chat-form" class="ai-chat-form">
+        <textarea id="ai-chat-input" rows="2" maxlength="8000" placeholder="Ask SecureCode AI a question about your code…" aria-label="Message SecureCode AI"></textarea>
+        <button type="submit" class="btn btn-primary" id="ai-chat-send">Send</button>
+      </form>
+    </section>
+        </div>
+
+        <!-- DEPENDENCIES / SCA PANEL -->
+        <div class="pane-panel" data-panel="dependencies" hidden>
+          <section class="stats-section">
+            <div class="section-header">
+              <h2 class="section-title">📦 Software Composition Analysis (SCA)</h2>
+              <span id="sca-status-badge" class="syntax-badge syntax-badge--ok" hidden>Manifest Clean</span>
+            </div>
+            <p class="drop-zone-hint">Scan <code>requirements.txt</code> or <code>package.json</code> for known CVEs, vulnerable packages, and generate upgrade commands.</p>
+
+            <div class="sca-input-bar" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:10px 0;">
+              <input type="text" id="sca-manifest-name" class="sca-input-name" value="requirements.txt" style="flex:1; min-width:160px; padding:6px 10px; background:var(--bg-editor, #0d1117); color:var(--text-primary); border:1px solid var(--border-color, #30363d); border-radius:6px; font-size:12px;" />
+              <button type="button" class="btn btn-primary" id="sca-scan-btn">⚡ Scan Dependencies</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="sca-sample-reqs">Load Sample (Python)</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="sca-sample-pkg">Load Sample (Node.js)</button>
+            </div>
+
+            <div class="sca-editor-wrap" style="margin-top: 10px;">
+              <textarea id="sca-editor" rows="6" style="width:100%; padding:10px; font-family:'JetBrains Mono',monospace; font-size:12px; background:var(--bg-editor, #0d1117); color:#e2e8f0; border:1px solid var(--border-color, #30363d); border-radius:8px; resize:vertical;" placeholder="Paste requirements.txt or package.json here...
+e.g.
+requests==2.20.0
+urllib3==1.24.2
+jinja2==3.0.0
+pyyaml==5.3"></textarea>
+            </div>
+
+            <!-- Metrics bar for SCA -->
+            <div class="summary-bar sca-metrics-bar" id="sca-metrics-bar" style="margin-top: 14px;" hidden>
+              <div class="summary-card summary-card--total">
+                <div class="sc-value" id="sca-total-pkgs">0</div>
+                <div class="sc-label">Packages</div>
+              </div>
+              <div class="summary-card summary-card--critical">
+                <div class="sc-value" id="sca-crit-cves">0</div>
+                <div class="sc-label">Critical CVEs</div>
+              </div>
+              <div class="summary-card summary-card--high">
+                <div class="sc-value" id="sca-high-cves">0</div>
+                <div class="sc-label">High CVEs</div>
+              </div>
+              <div class="summary-card summary-card--medium">
+                <div class="sc-value" id="sca-med-cves">0</div>
+                <div class="sc-label">Medium CVEs</div>
+              </div>
+              <div class="summary-card summary-card--score">
+                <div class="sc-value" id="sca-vuln-pkgs">0</div>
+                <div class="sc-label">Vulnerable Pkgs</div>
+              </div>
+            </div>
+
+            <!-- Recommended Upgrades Box -->
+            <div id="sca-upgrades-section" class="stats-section" style="margin-top: 14px; background:rgba(56, 189, 248, 0.05); border:1px solid rgba(56, 189, 248, 0.2); border-radius:8px; padding:12px;" hidden>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h3 style="margin:0; font-size:0.9rem; color:var(--text-primary);">🚀 Recommended Upgrade Commands</h3>
+                <button type="button" class="btn btn-ghost btn-sm" id="copy-all-upgrades-btn">📋 Copy Commands</button>
+              </div>
+              <pre id="sca-upgrade-commands" style="margin:0; padding:10px; background:#0d1117; color:#38bdf8; border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:12px; overflow-x:auto;"></pre>
+            </div>
+
+            <!-- Vulnerable CVE Cards List -->
+            <div id="sca-results-list" style="margin-top: 14px;"></div>
+          </section>
+        </div>
+
+        <!-- FIREWALL LAB PANEL -->
+        <div class="pane-panel" data-panel="firewall" hidden>
+<section class="stats-section ai-firewall-panel" id="ai-firewall-panel" aria-labelledby="ai-firewall-title">
+      <div class="section-header"><h2 class="section-title" id="ai-firewall-title">🛡️ AI Firewall &amp; Attack Simulation Lab</h2><span class="firewall-status" id="ai-firewall-status">Firewall enabled</span></div>
+      <p class="drop-zone-hint">Run harmless, local simulations of prompt injection, hidden-prompt extraction, secret exfiltration, guardrail bypass, and tool-abuse attempts. Source-code injections are flagged as untrusted content rather than treated as instructions.</p>
+      <div class="firewall-toolbar"><button type="button" class="btn btn-primary" id="run-firewall-demo">Run simulated attacks</button><span id="firewall-demo-summary" class="drop-zone-hint" role="status">Ready to test. These simulations do not call the AI model.</span></div>
+      <div id="firewall-demo-results" class="firewall-results" aria-live="polite"></div>
+      <p class="firewall-disclaimer">Test results demonstrate these specific deterministic checks only; they are not proof that every prompt-injection attack will be blocked.</p>
+    </section>
+        </div>
+        <!-- AGENT ACTIVITY & DASHBOARD PANEL -->
+        <div class="pane-panel" data-panel="agents" hidden>
+          <div class="agents-dashboard-wrap">
+            <div class="agents-header">
+              <div class="agents-header-title">
+                <h2>🤖 Multi-Agent Orchestrator Dashboard</h2>
+                <p class="drop-zone-hint">Hybrid architecture coordinating 16 specialized agents across local static rules, local Ollama models, and cloud AI.</p>
+              </div>
+              <div class="routing-mode-selector">
+                <span class="routing-mode-label">Execution Policy:</span>
+                <div class="mode-pill-group" id="routing-mode-group">
+                  <button type="button" class="mode-pill active" data-mode="AUTO" title="Automatic Hybrid routing: Local for rules/syntax, Cloud for reasoning">⚡ Auto (Hybrid)</button>
+                  <button type="button" class="mode-pill" data-mode="LOCAL_ONLY" title="Force 100% local execution: Zero internet, local rules & Ollama">💻 Local Only</button>
+                  <button type="button" class="mode-pill" data-mode="ONLINE_ONLY" title="Cloud AI primary with local fallback">☁ Online Only</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Agent Summary Stats -->
+            <div class="agent-stat-cards">
+              <div class="agent-stat-card">
+                <div class="stat-indicator dot-blue"></div>
+                <div class="stat-num" id="stat-active-agents">0</div>
+                <div class="stat-name">Active</div>
+              </div>
+              <div class="agent-stat-card">
+                <div class="stat-indicator dot-green"></div>
+                <div class="stat-num" id="stat-completed-agents">0</div>
+                <div class="stat-name">Completed</div>
+              </div>
+              <div class="agent-stat-card">
+                <div class="stat-indicator dot-yellow"></div>
+                <div class="stat-num" id="stat-waiting-agents">16</div>
+                <div class="stat-name">Waiting / Ready</div>
+              </div>
+              <div class="agent-stat-card">
+                <div class="stat-indicator dot-red"></div>
+                <div class="stat-num" id="stat-failed-agents">0</div>
+                <div class="stat-name">Failed</div>
+              </div>
+            </div>
+
+            <!-- Quick Orchestration Actions Toolbar -->
+            <div class="orchestrator-actions-bar">
+              <button type="button" class="btn btn-primary btn-sm" id="btn-run-self-healing" title="Run full 11-step self-healing pipeline">⚡ Run Self-Healing Pipeline</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-explain-active" title="Run CodeExplanationAgent">💡 Explain File</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-verify-current" title="Run VerificationAgent">🛡️ Verify Fixes</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-refresh-agents" title="Refresh agent statuses">↻ Refresh</button>
+            </div>
+
+            <!-- Registered Agents Section -->
+            <div class="agent-section-block">
+              <div class="agent-block-title">
+                <h3>Registered Agents (16 Total)</h3>
+                <span class="badge-tag" id="agents-ready-badge">6 Local Static · 5 Local Ollama · 5 Cloud AI</span>
+              </div>
+              <div class="agents-grid" id="agents-grid-container">
+                <!-- Dynamically rendered registered agent cards -->
+              </div>
+            </div>
+
+            <!-- Live Agent Activity & Handoff Timeline -->
+            <div class="agent-section-block">
+              <div class="agent-block-title">
+                <h3>Live Agent Activity &amp; Task Handoffs</h3>
+                <span id="activity-count-badge" class="badge-tag">0 logged tasks</span>
+              </div>
+              <div class="agent-activity-list" id="agent-activity-list">
+                <div class="activity-empty">No agent tasks executed yet. Run an analysis, explanation, or repair to observe live multi-agent execution.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /.pane-body -->
+    </div><!-- /.right-pane -->
+    </div><!-- /.ide-layout -->
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <p>SecureCode AI — Intelligent Code Security Platform</p>
+  </footer>
+
+  <!-- ===== CONFIGURE API KEY MODAL ===== -->
+  <div id="api-key-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="api-key-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">🔑</span>
+          <h3 id="api-key-modal-title">Configure AI API Key</h3>
+        </div>
+        <button id="close-api-key-modal-btn" class="modal-close-btn" type="button" aria-label="Close modal">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-description">
+          SecureCode AI connects directly to online LLMs for vulnerability investigation, automated code repairs, and intelligent chat.
+        </p>
+        <div class="api-key-providers">
+          <div class="provider-badge active">
+            <span class="badge-dot"></span>
+            <div>
+              <strong>Google Gemini</strong>
+              <div class="badge-sub">Keys start with <code>AQ...</code> or <code>AIza...</code> &bull; <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a></div>
+            </div>
+          </div>
+          <div class="provider-badge">
+            <span class="badge-dot"></span>
+            <div>
+              <strong>Groq Cloud</strong>
+              <div class="badge-sub">Keys start with <code>gsk_...</code> &bull; <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com</a></div>
+            </div>
+          </div>
+          <div class="provider-badge">
+            <span class="badge-dot"></span>
+            <div>
+              <strong>xAI Grok</strong>
+              <div class="badge-sub">Keys start with <code>xai-...</code> &bull; <a href="https://console.x.ai" target="_blank" rel="noopener">console.x.ai</a></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="api-key-input" class="form-label">API Key</label>
+          <div class="input-with-button">
+            <input type="password" id="api-key-input" class="form-input" placeholder="Paste your Gemini (AQ...), Groq (gsk_...), or xAI key here" autocomplete="off" />
+            <button type="button" id="toggle-key-visibility-btn" class="btn-toggle-eye" title="Toggle visibility">👁️</button>
+          </div>
+          <div class="form-help">
+            Saved safely to <code>.env</code> on your local computer. Never sent to third parties.
+          </div>
+        </div>
+        <div id="api-key-status-msg" class="api-key-status-msg hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cancel-api-key-btn" class="btn btn-secondary">Cancel</button>
+        <button type="button" id="save-api-key-btn" class="btn btn-primary">
+          <span class="btn-text">Save &amp; Connect</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
